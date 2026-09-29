@@ -1,0 +1,63 @@
+[project]
+name = "aegisops-shop"
+version = "0.1.0"
+description = "AegisOps demo application: a deliberately realistic e-commerce app (storefront, checkout, payment, inventory, notification worker, traffic generator) whose faults AegisOps investigates."
+requires-python = ">=3.12,<3.13"
+license = { text = "Apache-2.0" }
+dependencies = [
+  # HTTP services
+  "fastapi==0.141.1",
+  "uvicorn==0.54.0",
+  "httpx==0.28.1",
+  # Telemetry
+  "prometheus-client==0.26.0",
+  "opentelemetry-api==1.45.0",
+  "opentelemetry-sdk==1.45.0",
+  "opentelemetry-exporter-otlp-proto-http==1.45.0",
+  "opentelemetry-instrumentation-fastapi==0.66b0",
+  "opentelemetry-instrumentation-httpx==0.66b0",
+  # AWS (SQS, Secrets Manager) and PostgreSQL
+  "boto3==1.43.104",
+  "psycopg[binary]==3.3.6",
+]
+
+[dependency-groups]
+dev = [
+  "pytest==9.1.1",
+  "pytest-asyncio==1.4.0",
+  "moto[sqs,secretsmanager]==5.2.3",
+  "ruff==0.16.9",
+]
+
+[tool.uv]
+# An application, not a library: the source tree is put on PYTHONPATH (tests, Dockerfile).
+package = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+  "integration: needs a real PostgreSQL (set SHOP_TEST_DATABASE_URL)",
+]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC", "S", "SIM", "RUF"]
+ignore = ["S101", "S311", "RUF012", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B", "RUF", "E501"]
+"smoke/**" = ["S"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+  "shop_common", "storefront", "checkout_service", "payment_service",
+  "inventory_service", "notification_worker", "traffic_generator", "sqs_exporter",
+]

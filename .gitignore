@@ -1,0 +1,23 @@
+# Local tooling & runtime data (never commit)
+.tools/
+.data/
+.aegisops/
+.env
+*.env.local
+**/.venv/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+*.log
+.DS_Store
+evaluation/results/**/raw/
+kubeconfig
+*.kubeconfig

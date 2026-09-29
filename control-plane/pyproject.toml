@@ -1,0 +1,103 @@
+[project]
+name = "aegisops"
+version = "0.1.0"
+description = "AegisOps control plane: MCP-powered multi-agent incident response for Kubernetes and AWS (local emulation)."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "Apache-2.0" }
+dependencies = [
+  # API & runtime
+  "fastapi==0.141.1",
+  "uvicorn[standard]==0.54.0",
+  "pydantic==2.13.5",
+  "pydantic-settings==2.15.0",
+  "httpx==0.28.1",
+  "sse-starlette==3.5.0",
+  "python-ulid==4.0.1",
+  "structlog==26.1.0",
+  "anyio==4.15.1",
+  "pyyaml==6.0.3",
+  # Security
+  "pyjwt[crypto]==2.15.1",
+  "cryptography==50.0.1",
+  "argon2-cffi==25.1.0",
+  # Cloud / cluster
+  "boto3==1.43.104",
+  "kubernetes==36.0.3",
+  # MCP
+  "mcp==2.2.0",
+  # AI
+  "openai==3.20.0",
+  "tiktoken==0.14.0",
+  "langgraph==1.2.12",
+  "langgraph-checkpoint-postgres==3.1.2",
+  "langgraph-checkpoint-sqlite==3.1.1",
+  # Knowledge store
+  "psycopg[binary]==3.3.6",
+  "psycopg-pool==3.3.3",
+  "pgvector==0.5.0",
+  "numpy==2.5.3",
+  # CLI
+  "typer==0.27.2",
+  "rich==15.0.0",
+  # Self-observability
+  "prometheus-client==0.26.0",
+]
+
+[project.scripts]
+aegis = "aegisops.cli.main:app"
+aegisops-api = "aegisops.api.main:run"
+aegisops-worker = "aegisops.worker.main:run"
+aegisops-mcp = "aegisops.mcp.main:run"
+
+[dependency-groups]
+dev = [
+  "pytest==9.1.1",
+  "pytest-asyncio==1.4.0",
+  "moto[dynamodb,sqs,s3,secretsmanager,events]==5.2.3",
+  "respx==0.23.1",
+  "ruff==0.16.9",
+  "mypy==2.3.1",
+  "types-PyYAML",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["aegisops"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+markers = [
+  "cluster: requires the running Kind cluster (make up)",
+  "live: calls the paid OpenAI API; never run in routine CI",
+  "slow: long-running test",
+]
+addopts = "-m 'not cluster and not live' -q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC", "S", "SIM", "RUF"]
+ignore = ["S101", "S311", "RUF012", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B", "RUF", "E501"]
+# enum/constant names such as INVALID_SECRET trip the hardcoded-password heuristic
+"aegisops/domain/**" = ["S105"]
+"aegisops/api/schemas.py" = ["S105"]
+# the tool catalog is a table; one row per line reads better than wrapped calls
+"aegisops/domain/tools.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+check_untyped_defs = true
